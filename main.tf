@@ -92,10 +92,53 @@ resource "aws_nat_gateway" "this" {
   subnet_id     = aws_subnet.public[count.index].id
 
   depends_on = [aws_internet_gateway.this]
-  
+
   tags = {
     Name = "${var.project_name}-nat-${count.index + 1}"
   }
 }
+
+//Private route tables and associations for app-tier
+resource "aws_route_table" "private_app" {
+  count  = 2
+  vpc_id = aws_vpc.this.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.this[count.index].id
+  }
+
+  tags = {
+    Name = "${var.project_name}-app-rt-${count.index + 1}"
+  }
+}
+
+resource "aws_route_table_association" "private_app" {
+  count          = 2
+  subnet_id      = aws_subnet.app[count.index].id
+  route_table_id = aws_route_table.private_app[count.index].id
+}
+
+//Private route tables and associationsfor data-tier
+resource "aws_route_table" "private_data" {
+  count  = 2
+  vpc_id = aws_vpc.this.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.this[count.index].id
+  }
+
+  tags = {
+    Name = "${var.project_name}-data-rt-${count.index + 1}"
+  }
+}
+
+resource "aws_route_table_association" "private_data" {
+  count          = 2
+  subnet_id      = aws_subnet.data[count.index].id
+  route_table_id = aws_route_table.private_data[count.index].id
+}
+
 
 
