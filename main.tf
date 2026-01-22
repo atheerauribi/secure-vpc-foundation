@@ -14,7 +14,7 @@ resource "aws_vpc" "this" {
   }
 }
 
-//One public subnet per AZ
+//Public subnet (one-per-AZ)
 resource "aws_subnet" "public" {
   count                   = 2
   vpc_id                  = aws_vpc.this.id
@@ -56,7 +56,7 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-//Private app-tier subnets
+//Private app-tier subnets (one-per-AZ)
 resource "aws_subnet" "app" {
   count             = 2
   vpc_id            = aws_vpc.this.id
@@ -68,7 +68,7 @@ resource "aws_subnet" "app" {
   }
 }
 
-//Private data-tier subnets
+//Private data-tier subnets (one-per-AZ)
 resource "aws_subnet" "data" {
   count             = 2
   vpc_id            = aws_vpc.this.id
@@ -77,6 +77,24 @@ resource "aws_subnet" "data" {
 
   tags = {
     Name = "${var.project_name}-data-${count.index + 1}"
+  }
+}
+
+//NAT Gateway (one-per-AZ)
+resource "aws_eip" "nat_eip" {
+  count = 2
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "this" {
+  count         = 2
+  allocation_id = aws_eip.nat_eip[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
+
+  depends_on = [aws_internet_gateway.this]
+  
+  tags = {
+    Name = "${var.project_name}-nat-${count.index + 1}"
   }
 }
 
