@@ -43,3 +43,14 @@ variable "data_subnet_cidrs" {
   ]
 }
 
+variable "admin_ip_cidr" {
+  description = "CIDR block for admin access to bastion host."
+  type        = string
+}
+
+variable "key_pair_name" {
+  description = "Name of the existing EC2 Key Pair to use for the bastion host"
+  type        = string
+  default     = "my-key-pair"
+}
+
