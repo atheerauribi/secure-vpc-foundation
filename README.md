@@ -25,6 +25,34 @@ Each subnet uses a /20 CIDR block, which provides sufficient IP addresses for gr
 
 
 TODO: architecture model
+```mermaid
+flowchart TD
+    subgraph VPC["VPC 10.0.0.0/16"]
+        direction TB
+
+        subgraph AZB["AZ-B"]
+            direction TB
+            PUB_B["Public 10.0.16.0/20 - Bastion/ALB"]
+            APP_B["App 10.0.48.0/20 - Application Servers"]
+            DATA_B["Data 10.0.80.0/20 - Databases"]
+        end
+
+        subgraph AZA["AZ-A"]
+            direction TB
+            PUB_A["Public 10.0.0.0/20 - Bastion/ALB"]
+            APP_A["App 10.0.32.0/20 - Application Servers"]
+            DATA_A["Data 10.0.64.0/20 - Databases"]
+        end
+
+        %% Traffic flows
+        PUB_A -->|HTTPS| APP_A
+        PUB_B -->|HTTPS| APP_B
+        APP_A -->|DB Port| DATA_A
+        APP_B -->|DB Port| DATA_B
+        PUB_A -->|SSH| APP_A
+        PUB_B -->|SSH| APP_B
+    end
+```
 
 ## Security
 
