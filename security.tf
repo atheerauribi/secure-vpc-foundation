@@ -118,3 +118,68 @@ resource "aws_security_group" "data" {
     cidr_blocks = []
   }
 }
+
+// ---- Network ACLs ---- 
+
+//Public NACL
+resource "aws_network_acl" "public" {
+  vpc_id = aws_vpc.this.id
+
+  tags = {
+    Name = "${var.project_name}-public-nacl"
+  }
+}
+
+//Inbound HTTP
+resource "aws_network_acl_rule" "public_in_http" {
+  network_acl_id = aws_network_acl.public.id
+  rule_number    = 100
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 80
+  to_port        = 80
+}
+
+//Inbound HTTPS
+resource "aws_network_acl_rule" "public_in_https" {
+  network_acl_id = aws_network_acl.public.id
+  rule_number    = 110
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 443
+  to_port        = 443
+}
+
+//Inbound SSH (admin CIDR only)
+resource "aws_network_acl_rule" "public_in_ssh" {
+  network_acl_id = aws_network_acl.public.id
+  rule_number    = 120
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = var.admin_ip_cidr
+  from_port      = 22
+  to_port        = 22
+}
+
+//Inbound ephemeral ports
+resource "aws_network_acl_rule" "public_in_ephemeral" {
+  network_acl_id = aws_network_acl.public.id
+  rule_number    = 130
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 1024
+  to_port        = 65535
+}
+
+//Outbound all
+resource "aws_network_acl_rule" "public_out_all" {
+  network_acl_id = aws_network_acl.public.id
+  rule_number    = 100
+  egress         = true
+  protocol       = "-1"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+}
