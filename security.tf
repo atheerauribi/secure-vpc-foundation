@@ -42,13 +42,6 @@ resource "aws_security_group" "public" {
   }
 
   egress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app.id]
-  }
-
-  egress {
     from_port       = 443
     to_port         = 443
     protocol        = "tcp"
@@ -61,13 +54,6 @@ resource "aws_security_group" "app" {
   name        = "${var.project_name}-app-sg"
   description = "Application tier security group"
   vpc_id      = aws_vpc.this.id
-
-  ingress {
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    security_groups = [aws_security_group.public.id]
-  }
 
   ingress {
     from_port       = 443
