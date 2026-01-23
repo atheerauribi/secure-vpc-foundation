@@ -25,3 +25,9 @@ Each subnet uses a /20 CIDR block, which provides sufficient IP addresses for gr
 
 
 TODO: architecture model
+
+## Security
+
+### Security Groups
+
+### ACL

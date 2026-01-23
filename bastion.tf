@@ -1,24 +1,3 @@
-//Bastion sg
-resource "aws_security_group" "bastion" {
-  name        = "${var.project_name}-bastion-sg"
-  description = "Allow SSH from admin IPs only"
-  vpc_id      = aws_vpc.this.id
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.admin_ip_cidr]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
 //Get latest Amazon Linux 2 AMI
 data "aws_ami" "amazon_linux_2" {
   most_recent = true

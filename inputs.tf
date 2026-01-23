@@ -54,3 +54,9 @@ variable "key_pair_name" {
   default     = "my-key-pair"
 }
 
+variable "db_port" {
+  description = "Port for database access"
+  type        = number
+  default     = 5432
+}
+
