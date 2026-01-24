@@ -16,7 +16,7 @@ data "aws_ami" "ubuntu_24" {
 
 //Bastion EC2
 resource "aws_instance" "bastion" {
-  ami           = data.aws_ami.amazon_linux_2.id
+  ami           = data.aws_ami.ubuntu_24.id
   instance_type = "t3.micro"
   subnet_id     = aws_subnet.public[0].id
   key_name      = var.key_pair_name
