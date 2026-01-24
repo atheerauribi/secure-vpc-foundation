@@ -96,13 +96,6 @@ resource "aws_security_group" "data" {
     protocol        = "tcp"
     security_groups = [aws_security_group.app.id]
   }
-
-  egress {
-    from_port       = var.db_port
-    to_port         = var.db_port
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app.id]
-  }
 }
 
 // ---- Network ACLs ---- 
