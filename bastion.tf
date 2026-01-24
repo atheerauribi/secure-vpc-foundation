@@ -1,11 +1,11 @@
-//Get latest Amazon Linux 2 AMI
-data "aws_ami" "amazon_linux_2" {
+// Get latest Ubuntu 24.04 LTS AMI
+data "aws_ami" "ubuntu_24" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"] //Canonical's account ID
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-24.04-amd64-server-*"]
   }
 
   filter {
