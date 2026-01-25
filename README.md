@@ -1,6 +1,6 @@
 # Overview
 
-The goal of this project is to design and build a production-grade network architecture in AWS that can host a three-tier web application. 
+The goal of this project is to design and build a secure, production-grade network architecture in AWS that can host a three-tier web application. 
 
 Key design goals:
 

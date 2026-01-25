@@ -70,21 +70,21 @@ resource "aws_security_group" "app" {
 
 //App sg rules
 resource "aws_security_group_rule" "app_in_https_from_public" {
-  type              = "ingress"
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
   source_security_group_id = aws_security_group.public.id
-  security_group_id = aws_security_group.app.id
+  security_group_id        = aws_security_group.app.id
 }
 
 resource "aws_security_group_rule" "app_in_ssh_from_bastion" {
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
+  type                     = "ingress"
+  from_port                = 22
+  to_port                  = 22
+  protocol                 = "tcp"
   source_security_group_id = aws_security_group.bastion.id
-  security_group_id = aws_security_group.app.id
+  security_group_id        = aws_security_group.app.id
 }
 
 resource "aws_security_group_rule" "app_out_https" {
@@ -111,16 +111,18 @@ resource "aws_security_group" "data" {
   name        = "${var.project_name}-data-sg"
   description = "Data tier security group"
   vpc_id      = aws_vpc.this.id
+
+  egress = []
 }
 
 //Data sg rules
 resource "aws_security_group_rule" "data_in_db_from_app" {
-  type              = "ingress"
-  from_port         = var.db_port
-  to_port           = var.db_port
-  protocol          = "tcp"
+  type                     = "ingress"
+  from_port                = var.db_port
+  to_port                  = var.db_port
+  protocol                 = "tcp"
   source_security_group_id = aws_security_group.app.id
-  security_group_id = aws_security_group.data.id
+  security_group_id        = aws_security_group.data.id
 }
 
 // ---- Network ACLs ---- 
