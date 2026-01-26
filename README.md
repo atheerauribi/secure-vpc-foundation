@@ -1,6 +1,6 @@
 # Overview
 
-The goal of this project is to design and build a production-grade network architecture in AWS that can host a three-tier web application. 
+The goal of this project is to design and build a secure, production-grade network architecture in AWS that can host a three-tier web application. 
 
 Key design goals:
 
@@ -20,7 +20,7 @@ The network is designed using a multi-AZ, three-tier model. Public subnets provi
 
 The VPC uses a /16 CIDR (10.0.0.0/16). This provides ample address space that can support horizontal scaling across multiple Availability Zones.
 
-Associated with the VPC is an internet gateway, which allows resources in public subnets to reach the internet.
+Associated with the VPC is an **internet gateway**, which allows resources in public subnets to reach the internet.
 
 ## Subnets
 
@@ -44,49 +44,93 @@ Each subnet uses a /20 CIDR block, which provides sufficient address space for g
 +--------+--------------+--------------+------------------------------------+
 ```
 
+## NAT Gateway
+
+The NAT gateway provides outbound-only internet access for private subnets while preventing any inbound connectivity from the internet. This access is required for system updates and package installation. Ingress remains strictly controlled at all tiers through security groups and network ACLs.
+
+**Important Note**: Outbound access for the app-tier is intentionally permissive during early deployment to reduce operational risk, with a clear path toward tighter egress controls as the system matures.
+
+## Diagram
+
 Below is an outline of the complete architecture:
 ```mermaid
-flowchart TD
+flowchart TB
+    Internet --> IGW["Internet Gateway"]
+
     subgraph VPC["VPC 10.0.0.0/16"]
-        direction TB
+        direction LR
 
-        subgraph AZB["AZ-B"]
+        subgraph AZB["Availability Zone B"]
             direction TB
-            PUB_B["Public 10.0.16.0/20 - Bastion/ALB"]
-            APP_B["App 10.0.48.0/20 - Application Servers"]
-            DATA_B["Data 10.0.80.0/20 - Databases"]
+
+            subgraph AZB_PUB["Public Subnet"]
+                PUB_B["ALB (HTTPS)<br/>Bastion Host (SSH)<br/>10.0.16.0/20"]
+                NAT_B["NAT Gateway<br/>Outbound Only"]
+            end
+
+            subgraph AZB_APP["Private App Subnet"]
+                APP_B["Application Servers<br/>10.0.48.0/20"]
+            end
+
+            subgraph AZB_DATA["Private Data Subnet"]
+                DATA_B["Databases<br/>10.0.80.0/20"]
+            end
         end
 
-        subgraph AZA["AZ-A"]
+        subgraph AZA["Availability Zone A"]
             direction TB
-            PUB_A["Public 10.0.0.0/20 - Bastion/ALB"]
-            APP_A["App 10.0.32.0/20 - Application Servers"]
-            DATA_A["Data 10.0.64.0/20 - Databases"]
-        end
 
-        %% Traffic flows
-        PUB_A -->|HTTPS| APP_A
-        PUB_B -->|HTTPS| APP_B
-        APP_A -->|DB Port| DATA_A
-        APP_B -->|DB Port| DATA_B
-        PUB_A -->|SSH| APP_A
-        PUB_B -->|SSH| APP_B
+            subgraph AZA_PUB["Public Subnet"]
+                PUB_A["ALB (HTTPS)<br/>Bastion Host (SSH)<br/>10.0.0.0/20"]
+                NAT_A["NAT Gateway<br/>Outbound Only"]
+            end
+
+            subgraph AZA_APP["Private App Subnet"]
+                APP_A["Application Servers<br/>10.0.32.0/20"]
+            end
+
+            subgraph AZA_DATA["Private Data Subnet"]
+                DATA_A["Databases<br/>10.0.64.0/20"]
+            end
+        end
     end
+
+    %% Internet connectivity
+    IGW --> AZA_PUB
+    IGW --> AZB_PUB
+    NAT_A --> IGW
+    NAT_B --> IGW
+
+    %% Ingress traffic (ALB)
+    PUB_A -->|HTTPS| APP_A
+    PUB_B -->|HTTPS| APP_B
+
+    %% Admin access (Bastion only)
+    PUB_A -->|SSH from Bastion Host| APP_A
+    PUB_B -->|SSH from Bastion Host| APP_B
+
+    %% Data access
+    APP_A -->|DB Port| DATA_A
+    APP_B -->|DB Port| DATA_B
+
+    %% Outbound traffic
+    APP_A -->|Outbound HTTPS| NAT_A
+    APP_B -->|Outbound HTTPS| NAT_B
+
 ```
 
 # Security
-NIST SP 800-53 was used as a guiding reference for network segmentation and access control, with emphasis on least-privilege, tier isolation, and controlled trust boundaries. Refer to Security Groups section for tier-specific access details.
+NIST SP 800-53 was used as a guiding reference for network segmentation and access control, with emphasis on least-privilege, tier isolation, and controlled trust boundaries. Refer to the *Security Groups* section for tier-specific access details.
 
 ## Security Groups
 Below is a breakdown of all created security groups along with the rules applied to them.
 
 ### Bastion Security Group
-
+----
 #### Purpose:
 Provide controlled administrative access to private instances without exposing them directly to the internet.
 
 #### Rules:
-
 **Ingress**
 - SSH (22) from a single trusted admin CIDR
 
@@ -151,7 +195,7 @@ Protect backend databases from unauthorized access.
 - Database port from the application security group only
 
 **Egress**
-- None explicitly defined
+- None
 
 #### Rationale:
 The data tier is fully isolated:
