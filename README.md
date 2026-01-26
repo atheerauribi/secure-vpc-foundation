@@ -48,7 +48,7 @@ Each subnet uses a /20 CIDR block, which provides sufficient address space for g
 
 The NAT gateway provides outbound-only internet access for private subnets while preventing any inbound connectivity from the internet. This access is required for system updates and package installation. Ingress remains strictly controlled at all tiers through security groups and network ACLs.
 
-**Important Note**: In a production environment, outbound access would be progressively restricted once traffic patterns are well understood.
+**Important Note**: Outbound access for the app-tier is intentionally permissive during early deployment to reduce operational risk, with a clear path toward tighter egress controls as the system matures.
 
 ## Diagram
 
